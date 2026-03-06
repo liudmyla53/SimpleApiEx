@@ -1,0 +1,39 @@
+name: CI-CD ASP.NET Exercise
+
+on: [push, workflow_dispatch]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4 # 1.Clone the repository
+  
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4 # 2.Setup .NET SDK
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: 1. Tester le code
+        run: dotnet test
+
+      - name: 2. Réaliser le build
+        run: dotnet build --configuration Release
+
+      - name: 3. Message de succes
+        if: success()
+        run: |
+          echo "Bravo ! Le projet ${{ env.PROJECT_NAME }} est prêt."
+          echo "Lieu : ${{ env.FORMATION_CENTER }}"
+
+      - name: 4. Mail en cas d'erreur
+        if: failure()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: "ALERTE : Deployment fail !"
+          to: digitalcity@yopmail.com
+          from: GitHub Robot
+          body: "Et merde ! Ca a foiré sur ${{ env.FORMATION_CENTER }} !"
